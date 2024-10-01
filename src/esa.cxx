@@ -70,8 +70,8 @@ esa::esa(const sequence &seq) : m_size{seq.size() * 2 + 1}
 {
 	m_master = seq;
 	S = m_master.get_nucl() + '#' + reverse(m_master.get_nucl());
-	SA = std::make_unique<saidx64_t[]>(m_size);
-	divsufsort64(reinterpret_cast<const unsigned char *>(S.c_str()), SA.get(),
+	SA = std::make_unique<saidx_t[]>(m_size);
+	divsufsort(reinterpret_cast<const unsigned char *>(S.c_str()), SA.get(),
 			   m_size);
 
 	init_LCP();
@@ -94,7 +94,7 @@ void esa::init_cache()
 	char str[CACHE_LENGTH + 1];
 	str[CACHE_LENGTH] = '\0';
 
-	saidx64_t m = left_child(m_size);
+	saidx_t m = left_child(m_size);
 	lcp_interval ij = {.l = LCP[m], .i = 0, .j = m_size - 1, .m = m};
 
 	init_cache_dfs(str, 0, ij);
@@ -255,10 +255,10 @@ void esa::init_FVC()
  */
 void esa::init_CLD()
 {
-	CLD = std::make_unique<saidx64_t[]>(m_size + 1);
+	CLD = std::make_unique<saidx_t[]>(m_size + 1);
 
 	typedef struct pair_s {
-		saidx64_t idx, lcp;
+		saidx_t idx, lcp;
 	} pair_t;
 
 	auto stack = std::make_unique<pair_t[]>(m_size + 1);
@@ -304,21 +304,21 @@ void esa::init_CLD()
  */
 void esa::init_LCP()
 {
-	saidx64_t len = m_size;
+	saidx_t len = m_size;
 
 	// Allocate new memory
 	// The LCP array is one element longer than S.
-	LCP = std::make_unique<saidx64_t[]>(len + 1);
+	LCP = std::make_unique<saidx_t[]>(len + 1);
 
 	LCP[0] = -1;
 	LCP[len] = -1;
 
 	// Allocate temporary arrays
-	auto PHI = std::make_unique<saidx64_t[]>(len);
+	auto PHI = std::make_unique<saidx_t[]>(len);
 	auto &PLCP = PHI; //?
 
 	PHI[SA[0]] = -1;
-	saidx64_t k;
+	saidx_t k;
 	ssize_t i;
 
 	for (i = 1; i < len; i++) {
@@ -360,8 +360,8 @@ void esa::init_LCP()
  */
 lcp_interval esa::get_interval(lcp_interval ij, char a) const
 {
-	saidx64_t i = ij.i;
-	saidx64_t j = ij.j;
+	saidx_t i = ij.i;
+	saidx_t j = ij.j;
 
 	// check for singleton or empty interval
 	if (i == j) {
@@ -386,7 +386,7 @@ lcp_interval esa::get_interval(lcp_interval ij, char a) const
 
 			if (i != m - 1) {
 				// found interval contains >1 element
-				saidx64_t n = left_child(m);
+				saidx_t n = left_child(m);
 
 				ij = (lcp_interval){.l = LCP[n], .i = i, .j = m - 1, .m = n};
 			} else {
@@ -443,7 +443,7 @@ lcp_interval esa::get_interval(lcp_interval ij, char a) const
  * @param ij - The LCP interval for the string `query[0..k]`.
  * @returns The LCP interval for the longest prefix.
  */
-lcp_interval esa::get_match_from(const char *query, size_t qlen, saidx64_t k,
+lcp_interval esa::get_match_from(const char *query, size_t qlen, saidx_t k,
 								 lcp_interval ij) const
 {
 	if (ij.i == -1 && ij.j == -1) {
@@ -454,7 +454,7 @@ lcp_interval esa::get_match_from(const char *query, size_t qlen, saidx64_t k,
 	if (ij.i == ij.j) {
 
 		// try to extend the match. See line 513 below.
-		saidx64_t p = SA[ij.i];
+		saidx_t p = SA[ij.i];
 		size_t k = ij.l;
 		// const char *S = this->S;
 
@@ -469,7 +469,7 @@ lcp_interval esa::get_match_from(const char *query, size_t qlen, saidx64_t k,
 		return ij;
 	}
 
-	saidx64_t l, i, j;
+	saidx_t l, i, j;
 
 	lcp_interval res = ij;
 
@@ -524,7 +524,7 @@ lcp_interval esa::get_match_from(const char *query, size_t qlen, saidx64_t k,
  */
 lcp_interval esa::get_match(const char *query, size_t qlen) const
 {
-	saidx64_t m = left_child(m_size);
+	saidx_t m = left_child(m_size);
 	lcp_interval ij = {.l = LCP[m], .i = 0, .j = m_size - 1, .m = m};
 
 	return get_match_from(query, qlen, 0, ij);

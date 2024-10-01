@@ -13,7 +13,7 @@
 
 #include <sys/types.h>
 
-#include <divsufsort64.h>
+#include <divsufsort.h>
 
 #include "sequence.h"
 
@@ -30,13 +30,13 @@
  */
 typedef struct {
 	/** @brief The common prefix length */
-	saidx64_t l;
+	saidx_t l;
 	/** @brief lower bound */
-	saidx64_t i;
+	saidx_t i;
 	/** @brief upper bound */
-	saidx64_t j;
+	saidx_t j;
 	/** The new middle. */
-	saidx64_t m;
+	saidx_t m;
 } lcp_interval;
 
 /** @brief A full text index.
@@ -45,14 +45,14 @@ typedef struct {
 class esa
 {
 	/** Length of the arrays. */
-	saidx64_t m_size = 0;
+	saidx_t m_size = 0;
 	/** The sequence at the basis of the ESA. */
 	sequence m_master{};
 
 	/** The Longest Common Prefix array. */
-	std::unique_ptr<saidx64_t[]> LCP;
+	std::unique_ptr<saidx_t[]> LCP;
 	/** The child array. */
-	std::unique_ptr<saidx64_t[]> CLD;
+	std::unique_ptr<saidx_t[]> CLD;
 	/** The First Variant Character array. See Klötzl (2015) for an explanation.
 	 */
 	std::unique_ptr<char[]> FVC;
@@ -61,7 +61,7 @@ class esa
 
   public:
 	/** The Suffix Array */
-	std::unique_ptr<saidx64_t[]> SA;
+	std::unique_ptr<saidx_t[]> SA;
 	/** The base string */
 	std::string S{""};
 
@@ -87,7 +87,7 @@ class esa
 	void init_cache();
 	void init_cache_dfs(char *, size_t, lcp_interval);
 	void init_cache_fill(char *, size_t, lcp_interval);
-	lcp_interval get_match_from(const char *, size_t, saidx64_t,
+	lcp_interval get_match_from(const char *, size_t, saidx_t,
 								lcp_interval) const;
 	lcp_interval get_interval(lcp_interval ij, char a) const;
 
